@@ -14,7 +14,6 @@ export const getNewDeck = async () => {
     throw new Error("Sorry! Couldn't get a new deck.");
   }
   const data = await res.json();
-  console.log("data frpm getNewDeck ", data);
   return data;
 };
 
@@ -24,7 +23,19 @@ export interface DeckParams {
   pileName?: string;
 }
 
-export const getInitialPiles = async ({ deckId }: DeckParams) => {
+export const getShuffledDeck = async ({ deckId }: DeckParams) => {
+  const res = await fetch(
+    `https://deckofcardsapi.com/api/deck/${deckId}/shuffle/`,
+  );
+
+  if (!res.ok) {
+    throw new Error("Sorry! Couldn't shuffle the deck.");
+  }
+  const data = await res.json();
+  return data;
+};
+
+export const getInitialCards = async ({ deckId }: DeckParams) => {
   const res = await fetch(
     `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=2`,
   );
@@ -32,6 +43,7 @@ export const getInitialPiles = async ({ deckId }: DeckParams) => {
     throw new Error("Sorry! Couldn't get initial cards.");
   }
   const data = await res.json();
+
   return data;
 };
 
