@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 export interface ButtonProps {
   children: ReactNode | string;
-  disabled: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }
 

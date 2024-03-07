@@ -38,63 +38,69 @@ export default function Home() {
     }
   };
 
-  const getInitialHousePile = useCallback(async (id: string) => {
-    // better to initialize with 4 cards and split the two between the two piles?
-    const initialHouseCardsResponse = await getInitialCards({ deckId: id });
+  const getInitialHousePile = useCallback(
+    async (id: string) => {
+      // better to initialize with 4 cards and split the two between the two piles?
+      const initialHouseCardsResponse = await getInitialCards({ deckId: id });
 
-    const houseCards = initialHouseCardsResponse.cards;
-    // add each card to their pile
-    const cardAddedResponse = await addCardToPile({
-      deckId: id,
-      newCardCode: houseCards.map(
-        (houseCard: { code: string }) => houseCard.code,
-      ),
-      pileName: "house",
-    });
-
-    if (cardAddedResponse.success) {
-      const houseCardPileResponse = await getPile({
+      const houseCards = initialHouseCardsResponse.cards;
+      // add each card to their pile
+      const cardAddedResponse = await addCardToPile({
         deckId: id,
+        newCardCode: houseCards.map(
+          (houseCard: { code: string }) => houseCard.code,
+        ),
         pileName: "house",
       });
-      const newHousePile = houseCardPileResponse.piles.house.cards;
-      setHousePile(newHousePile);
 
-      const newTotal = calculateCardsValue({
-        aceValue: houseAceValue,
-        cards: housePile,
-      });
-      setHouseTotal(newTotal);
-    }
-  }, []);
+      if (cardAddedResponse.success) {
+        const houseCardPileResponse = await getPile({
+          deckId: id,
+          pileName: "house",
+        });
+        const newHousePile = houseCardPileResponse.piles.house.cards;
+        setHousePile(newHousePile);
 
-  const getInitialPlayerPile = useCallback(async (id: string) => {
-    const initialPlayerCardsResponse = await getInitialCards({ deckId: id });
+        const newTotal = calculateCardsValue({
+          aceValue: houseAceValue,
+          cards: housePile,
+        });
+        setHouseTotal(newTotal);
+      }
+    },
+    [houseAceValue, housePile],
+  );
 
-    const playerCards = initialPlayerCardsResponse.cards;
-    // add each card to their pile
-    const cardAddedResponse = await addCardToPile({
-      deckId: id,
-      newCardCode: playerCards.map(
-        (playerCard: { code: string }) => playerCard.code,
-      ),
-      pileName: "player",
-    });
+  const getInitialPlayerPile = useCallback(
+    async (id: string) => {
+      const initialPlayerCardsResponse = await getInitialCards({ deckId: id });
 
-    if (cardAddedResponse.success) {
-      const playerCardPileResponse = await getPile({
+      const playerCards = initialPlayerCardsResponse.cards;
+      // add each card to their pile
+      const cardAddedResponse = await addCardToPile({
         deckId: id,
+        newCardCode: playerCards.map(
+          (playerCard: { code: string }) => playerCard.code,
+        ),
         pileName: "player",
       });
-      const newPlayerPile = playerCardPileResponse.piles.player.cards;
-      setPlayerPile(newPlayerPile);
-      const newTotal = calculateCardsValue({
-        aceValue: playerAceValue,
-        cards: playerPile,
-      });
-      setPlayerTotal(newTotal);
-    }
-  }, []);
+
+      if (cardAddedResponse.success) {
+        const playerCardPileResponse = await getPile({
+          deckId: id,
+          pileName: "player",
+        });
+        const newPlayerPile = playerCardPileResponse.piles.player.cards;
+        setPlayerPile(newPlayerPile);
+        const newTotal = calculateCardsValue({
+          aceValue: playerAceValue,
+          cards: playerPile,
+        });
+        setPlayerTotal(newTotal);
+      }
+    },
+    [playerAceValue, playerPile],
+  );
 
   const handlePlayerHit = async () => {
     // is it better to combine the api call to go ahead and add the new card to the pile?
@@ -141,17 +147,18 @@ export default function Home() {
 
     const shuffleResponse = await getShuffledDeck({ deckId });
     if (shuffleResponse.success) {
-      setTimeout(() => {
-        setResetGame(true);
-        setPlayerTotal(0);
-        setHouseTotal(0);
-        setPlayerPile([]);
-        setHousePile([]);
-        setShowResult(false);
-        getInitialHousePile(deckId);
-        getInitialPlayerPile(deckId);
-      }, 5000);
+      setResetGame(true);
     }
+  };
+
+  const handleReset = () => {
+    setPlayerTotal(0);
+    setHouseTotal(0);
+    setPlayerPile([]);
+    setHousePile([]);
+    setShowResult(false);
+    getInitialHousePile(deckId);
+    getInitialPlayerPile(deckId);
     setResetGame(false);
   };
 
@@ -161,7 +168,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-8">
       <div>
         <h1 className="text-3xl">Blackjack</h1>
         {deckId === "" ? (
@@ -172,14 +179,14 @@ export default function Home() {
               <p>Dealer&apos;s Hand: {houseTotal}</p>
               <div className="container flex justify-evenly gap-2">
                 {/* add loading state? */}
-                <CardList cards={housePile} />
+                <CardList cards={housePile ?? []} />
               </div>
             </div>
             <div>
               <p>Player Hand: {playerTotal}</p>
               <div className="container flex justify-between gap-2">
                 {/* add loading state? */}
-                <CardList cards={playerPile} />
+                <CardList cards={playerPile ?? []} />
               </div>
               <div className="container flex justify-between gap-4 mt-4">
                 <Button disabled={resetGame} onClick={handlePlayerHit}>
@@ -192,7 +199,10 @@ export default function Home() {
             </div>
             {/* Had dark mode on automatically, will need to check for this on others or else red text might not show well */}
             {showResult && (
-              <p className="text-2xl text-red-700 mt-4">{gameMessage}</p>
+              <div className="flex flex-col justify-center items-center gap-4 mt-4">
+                <p className="text-2xl text-red-700 mt-4">{gameMessage}</p>
+                <Button onClick={handleReset}>Reset Game</Button>
+              </div>
             )}
           </div>
         )}
