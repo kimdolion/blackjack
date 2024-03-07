@@ -19,7 +19,7 @@ export const getNewDeck = async () => {
 
 export interface DeckParams {
   deckId: string;
-  newCardCode?: string;
+  newCardCode?: string[];
   pileName?: string;
 }
 
@@ -83,6 +83,41 @@ export const getPile = async ({ deckId, pileName }: DeckParams) => {
     throw new Error(`Sorry! Couldn't get the ${pileName}'s hand.`);
   }
   const data = await res.json();
-
   return data;
+};
+
+export const calculateCardsValue = ({
+  aceValue,
+  cards,
+}: {
+  aceValue: number;
+  cards: { value: string }[];
+}) => {
+  let total = 0;
+  cards.map((card: { value: string }) => {
+    let value = 0;
+    const cardValue = card.value;
+    switch (cardValue) {
+      case "KING": {
+        value = 10;
+        break;
+      }
+      case "QUEEN": {
+        value = 10;
+        break;
+      }
+      case "JACK": {
+        value = 10;
+        break;
+      }
+      case "ACE": {
+        value = aceValue;
+        break;
+      }
+      default:
+        value = parseInt(cardValue);
+    }
+    total += value;
+  });
+  return total;
 };

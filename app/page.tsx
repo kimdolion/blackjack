@@ -1,15 +1,18 @@
 "use client";
 
-import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
+import { CardList } from "./component.cardList";
 import {
+  DeckParams,
   addCardToPile,
+  calculateCardsValue,
   getInitialCards,
   getNewCard,
   getNewDeck,
   getPile,
   getShuffledDeck,
-} from "./api/route";
-import { useEffect, useState } from "react";
+} from "./utils";
+import { Button } from "./component.button";
 
 export default function Home() {
   const [deckId, setDeckId] = useState("");
@@ -17,105 +20,101 @@ export default function Home() {
   const [playerTotal, setPlayerTotal] = useState(0);
   const [housePile, setHousePile] = useState([]);
   const [houseTotal, setHouseTotal] = useState(0);
+  const [resetGame, setResetGame] = useState(false);
 
   const [gameMessage, setGameMessage] = useState("");
   const [showResult, setShowResult] = useState(false);
 
-  const ace = playerTotal >= 11 ? 1 : 11;
+  const houseAceValue = houseTotal >= 11 ? 1 : 11;
+  const playerAceValue = playerTotal >= 11 ? 1 : 11;
 
-  const handleDeckId = async () => {
-    try {
-      const newDeck = await getNewDeck();
-      setDeckId(newDeck.deck_id);
-
-      deckId !== "" && getInitialPiles();
-    } catch (error) {
-      console.log(error);
+  const getId = async () => {
+    const deckResponse = await getNewDeck();
+    if (deckResponse.success) {
+      const newDeckID = deckResponse.deck_id;
+      setDeckId(newDeckID);
+      getInitialHousePile(newDeckID);
+      getInitialPlayerPile(newDeckID);
     }
   };
 
-  const calculateCardsValue = ({
-    cards,
-    pileName,
-  }: {
-    cards: [];
-    pileName: string;
-  }) => {
-    let total = pileName === "player" ? playerTotal : houseTotal;
-    cards.map((card: { value: string }) => {
-      let value = 0;
-      const cardValue = card.value;
-      switch (cardValue) {
-        case "KING": {
-          value = 10;
-          break;
-        }
-        case "QUEEN": {
-          value = 10;
-          break;
-        }
-        case "JACK": {
-          value = 10;
-          break;
-        }
-        case "ACE": {
-          value = ace;
-          break;
-        }
-        default:
-          value = parseInt(cardValue);
-      }
-      total += value;
+  const getInitialHousePile = useCallback(async (id: string) => {
+    // better to initialize with 4 cards and split the two between the two piles?
+    const initialHouseCardsResponse = await getInitialCards({ deckId: id });
+
+    const houseCards = initialHouseCardsResponse.cards;
+    // add each card to their pile
+    const cardAddedResponse = await addCardToPile({
+      deckId: id,
+      newCardCode: houseCards.map(
+        (houseCard: { code: string }) => houseCard.code,
+      ),
+      pileName: "house",
     });
-    pileName === "player" ? setPlayerTotal(total) : setHouseTotal(total);
-  };
 
-  const getInitialPiles = async () => {
-    try {
-      const initialHouseCards = await getInitialCards({ deckId });
-      const initialPlayerCards = await getInitialCards({ deckId });
-      initialHouseCards.cards.map(async (houseCard: { code: string }) => {
-        await addCardToPile({
-          deckId,
-          newCardCode: houseCard.code,
-          pileName: "house",
-        });
+    if (cardAddedResponse.success) {
+      const houseCardPileResponse = await getPile({
+        deckId: id,
+        pileName: "house",
       });
+      const newHousePile = houseCardPileResponse.piles.house.cards;
+      setHousePile(newHousePile);
 
-      initialPlayerCards.cards.map(async (playerCard: { code: string }) => {
-        await addCardToPile({
-          deckId,
-          newCardCode: playerCard.code,
-          pileName: "player",
-        });
+      const newTotal = calculateCardsValue({
+        aceValue: houseAceValue,
+        cards: housePile,
       });
-      const initialHousePile = await getPile({ deckId, pileName: "house" });
-      setHousePile(initialHousePile.cards);
-
-      const initialPlayerPile = await getPile({ deckId, pileName: "house" });
-      setPlayerPile(initialPlayerPile.cards);
-
-      calculateCardsValue({ cards: housePile, pileName: "house" });
-      calculateCardsValue({ cards: playerPile, pileName: "player" });
-    } catch (error) {
-      console.log(error);
+      setHouseTotal(newTotal);
     }
-  };
+  }, []);
 
-  const handlePlayerHit = async () => {
-    // is it better to combine the api call to go ahead and add the new card to the pile?
-    const card = await getNewCard({ deckId });
+  const getInitialPlayerPile = useCallback(async (id: string) => {
+    const initialPlayerCardsResponse = await getInitialCards({ deckId: id });
 
-    await addCardToPile({
-      deckId,
-      newCardCode: card.cards[0].code,
+    const playerCards = initialPlayerCardsResponse.cards;
+    // add each card to their pile
+    const cardAddedResponse = await addCardToPile({
+      deckId: id,
+      newCardCode: playerCards.map(
+        (playerCard: { code: string }) => playerCard.code,
+      ),
       pileName: "player",
     });
 
-    const newPile = await getPile({ deckId, pileName: "player" });
+    if (cardAddedResponse.success) {
+      const playerCardPileResponse = await getPile({
+        deckId: id,
+        pileName: "player",
+      });
+      const newPlayerPile = playerCardPileResponse.piles.player.cards;
+      setPlayerPile(newPlayerPile);
+      const newTotal = calculateCardsValue({
+        aceValue: playerAceValue,
+        cards: playerPile,
+      });
+      setPlayerTotal(newTotal);
+    }
+  }, []);
 
-    setPlayerPile(newPile.piles.player.cards);
-    calculateCardsValue({ cards: playerPile, pileName: "player" });
+  const handlePlayerHit = async () => {
+    // is it better to combine the api call to go ahead and add the new card to the pile?
+    const cardResponse = await getNewCard({ deckId });
+    const newPlayerCard = cardResponse.cards;
+    const addedNewCardResponse = await addCardToPile({
+      deckId,
+      newCardCode: newPlayerCard[0].code,
+      pileName: "player",
+    });
+    if (addedNewCardResponse.success) {
+      const newPileResponse = await getPile({ deckId, pileName: "player" });
+      const newPileCards = newPileResponse.piles.player.cards;
+      setPlayerPile(newPileCards);
+      const newTotal = calculateCardsValue({
+        aceValue: playerAceValue,
+        cards: playerPile,
+      });
+      setPlayerTotal(newTotal);
+    }
   };
 
   const checkGameCondition = () => {
@@ -140,77 +139,62 @@ export default function Home() {
   const handlePlayerStand = async () => {
     checkGameCondition();
 
-    await getShuffledDeck({ deckId });
-    setTimeout(() => {
-      setPlayerTotal(0);
-      setHouseTotal(0);
-      setPlayerPile([]);
-      setHousePile([]);
-      setShowResult(false);
-    }, 5000);
+    const shuffleResponse = await getShuffledDeck({ deckId });
+    if (shuffleResponse.success) {
+      setTimeout(() => {
+        setResetGame(true);
+        setPlayerTotal(0);
+        setHouseTotal(0);
+        setPlayerPile([]);
+        setHousePile([]);
+        setShowResult(false);
+        getInitialHousePile(deckId);
+        getInitialPlayerPile(deckId);
+      }, 5000);
+    }
+    setResetGame(false);
   };
 
+  // get and set Game Id, which is needed for any calls going forward
   useEffect(() => {
-    handleDeckId();
-    setShowResult(false);
+    getId();
   }, []);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div>
         <h1 className="text-3xl">Blackjack</h1>
-        <div>
-          <p>Dealer's Hand: {houseTotal}</p>
-          <div className="container flex justify-between gap-2">
-            {housePile.length > 0 &&
-              housePile.map((houseCard: { code: string; image: string }) => {
-                console.log("house card ", houseCard);
-                return (
-                  <Image
-                    key={houseCard.code}
-                    alt="card"
-                    src={houseCard.image}
-                    height={200}
-                    width={200}
-                  />
-                );
-              })}
+        {deckId === "" ? (
+          <p>Loading...</p>
+        ) : (
+          <div>
+            <div>
+              <p>Dealer&apos;s Hand: {houseTotal}</p>
+              <div className="container flex justify-evenly gap-2">
+                {/* add loading state? */}
+                <CardList cards={housePile} />
+              </div>
+            </div>
+            <div>
+              <p>Player Hand: {playerTotal}</p>
+              <div className="container flex justify-between gap-2">
+                {/* add loading state? */}
+                <CardList cards={playerPile} />
+              </div>
+              <div className="container flex justify-between gap-4 mt-4">
+                <Button disabled={resetGame} onClick={handlePlayerHit}>
+                  Hit
+                </Button>
+                <Button disabled={resetGame} onClick={handlePlayerStand}>
+                  Stand
+                </Button>
+              </div>
+            </div>
+            {/* Had dark mode on automatically, will need to check for this on others or else red text might not show well */}
+            {showResult && (
+              <p className="text-2xl text-red-700 mt-4">{gameMessage}</p>
+            )}
           </div>
-        </div>
-        <div>
-          <p>Player Hand: {playerTotal}</p>
-          <div className="container flex justify-between gap-2">
-            {playerPile.length > 0 &&
-              playerPile.map((houseCard: { code: string; image: string }) => {
-                console.log("house card ", houseCard);
-                return (
-                  <Image
-                    key={houseCard.code}
-                    alt="card"
-                    src={houseCard.image}
-                    height={200}
-                    width={200}
-                  />
-                );
-              })}
-          </div>
-          <div className="container flex justify-between gap-4 mt-4">
-            <button
-              className="border p-4 rounded w-1/2"
-              onClick={handlePlayerHit}
-            >
-              Hit
-            </button>
-            <button
-              className="border p-4 rounded w-1/2"
-              onClick={handlePlayerStand}
-            >
-              Stand
-            </button>
-          </div>
-        </div>
-        {showResult && (
-          <p className="text-2xl text-red-700 mt-4">{gameMessage}</p>
         )}
       </div>
     </main>
