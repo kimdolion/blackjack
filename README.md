@@ -1,3 +1,6 @@
+![Screenshot 2024-03-06 at 9 01 56 PM](https://github.com/kimdolion/blackjack/assets/49125411/b8ce72be-3878-4f95-8d25-c46f472d55fe)
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
