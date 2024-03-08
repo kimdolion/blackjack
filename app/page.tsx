@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { CardList } from "./component.cardList";
 import {
-  DeckParams,
   addCardToPile,
   calculateCardsValue,
   getInitialCards,
@@ -13,6 +12,8 @@ import {
   getShuffledDeck,
 } from "./utils";
 import { Button } from "./component.button";
+import Link from "next/link";
+import { Github } from "lucide-react";
 
 export default function Home() {
   const [deckId, setDeckId] = useState("");
@@ -169,45 +170,69 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-8">
-      <div>
-        <h1 className="text-6xl text-center my-4">Blackjack</h1>
-        {deckId === "" ? (
-          <p>Loading...</p>
-        ) : (
-          <div className="divide-y-2 divide-gray-400">
-            <div className="my-8">
-              <p>Dealer&apos;s Hand: {houseTotal}</p>
-              <div className="container flex justify-evenly gap-2 flex-wrap">
-                {/* add loading state? */}
-                <CardList cards={housePile ?? []} />
+    <div>
+      <main className="flex min-h-screen flex-col items-center justify-between p-8">
+        <div>
+          <h1 className="text-6xl text-center my-4">Blackjack</h1>
+          {deckId === "" ? (
+            <p>Loading...</p>
+          ) : (
+            <div className="divide-y-2 divide-gray-400">
+              <div className="my-8">
+                <p>Dealer&apos;s Hand: {houseTotal}</p>
+                <div className="container flex justify-evenly gap-2 flex-wrap">
+                  {/* add loading state? */}
+                  <CardList cards={housePile ?? []} />
+                </div>
               </div>
+              <div className="my-8">
+                <p className="my-4">Player Hand: {playerTotal}</p>
+                <div className="container flex justify-between gap-2 flex-wrap">
+                  {/* add loading state? */}
+                  <CardList cards={playerPile ?? []} />
+                </div>
+                <div className="container flex justify-between gap-4 mt-4">
+                  <Button disabled={resetGame} onClick={handlePlayerHit}>
+                    Hit
+                  </Button>
+                  <Button disabled={resetGame} onClick={handlePlayerStand}>
+                    Stand
+                  </Button>
+                </div>
+              </div>
+              {/* Had dark mode on automatically, will need to check for this on others or else red text might not show well */}
+              {showResult && (
+                <div className="flex flex-col justify-center items-center gap-4 mt-4">
+                  <p className="text-2xl text-red-700 mt-4">{gameMessage}</p>
+                  <Button onClick={handleReset}>Reset Game</Button>
+                </div>
+              )}
             </div>
-            <div className="my-8">
-              <p className="my-4">Player Hand: {playerTotal}</p>
-              <div className="container flex justify-between gap-2 flex-wrap">
-                {/* add loading state? */}
-                <CardList cards={playerPile ?? []} />
-              </div>
-              <div className="container flex justify-between gap-4 mt-4">
-                <Button disabled={resetGame} onClick={handlePlayerHit}>
-                  Hit
-                </Button>
-                <Button disabled={resetGame} onClick={handlePlayerStand}>
-                  Stand
-                </Button>
-              </div>
-            </div>
-            {/* Had dark mode on automatically, will need to check for this on others or else red text might not show well */}
-            {showResult && (
-              <div className="flex flex-col justify-center items-center gap-4 mt-4">
-                <p className="text-2xl text-red-700 mt-4">{gameMessage}</p>
-                <Button onClick={handleReset}>Reset Game</Button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </main>
+          )}
+        </div>
+      </main>
+      <footer>
+        <div className="flex justify-between gap-2 m-4">
+          <p>
+            Made by{" "}
+            <Link
+              className="underline"
+              href={"https://www.linkedin.com/in/kimberly-wilkes/"}
+            >
+              Kimberly Wilkes
+            </Link>{" "}
+            with Next.js, TypeScript, and TailwindCSS
+          </p>
+          <Link
+            className="flex gap-2 underline"
+            href={"https://github.com/kimdolion/blackjack"}
+            target="_blank"
+          >
+            <Github />
+            Github
+          </Link>
+        </div>
+      </footer>
+    </div>
   );
 }
