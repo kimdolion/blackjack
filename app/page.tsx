@@ -60,7 +60,7 @@ export default function Home() {
           pileName: "house",
         });
         const newHousePile = houseCardPileResponse.piles.house.cards;
-        console.log(newHousePile);
+
         setHousePile(newHousePile);
 
         const newTotal = calculateCardsValue({
