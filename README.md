@@ -26,6 +26,8 @@ Initial version after maybe 4 hours of making mistakes with api calls
 ![Screenshot 2024-03-06 at 9 01 56 PM](https://github.com/kimdolion/blackjack/assets/49125411/b8ce72be-3878-4f95-8d25-c46f472d55fe)
 
 Current version as of Mar 7, 7:15 PM
+![Screenshot 2024-03-07 at 7 24 49 PM](https://github.com/kimdolion/blackjack/assets/49125411/0f435f57-f3a5-4992-a8a1-34963897178b)
+
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
