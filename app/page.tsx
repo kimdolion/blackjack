@@ -59,6 +59,7 @@ export default function Home() {
           pileName: "house",
         });
         const newHousePile = houseCardPileResponse.piles.house.cards;
+        console.log(newHousePile);
         setHousePile(newHousePile);
 
         const newTotal = calculateCardsValue({
@@ -170,21 +171,21 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-8">
       <div>
-        <h1 className="text-3xl">Blackjack</h1>
+        <h1 className="text-6xl text-center my-4">Blackjack</h1>
         {deckId === "" ? (
           <p>Loading...</p>
         ) : (
-          <div>
-            <div>
+          <div className="divide-y-2 divide-gray-400">
+            <div className="my-8">
               <p>Dealer&apos;s Hand: {houseTotal}</p>
-              <div className="container flex justify-evenly gap-2">
+              <div className="container flex justify-evenly gap-2 flex-wrap">
                 {/* add loading state? */}
                 <CardList cards={housePile ?? []} />
               </div>
             </div>
-            <div>
-              <p>Player Hand: {playerTotal}</p>
-              <div className="container flex justify-between gap-2">
+            <div className="my-8">
+              <p className="my-4">Player Hand: {playerTotal}</p>
+              <div className="container flex justify-between gap-2 flex-wrap">
                 {/* add loading state? */}
                 <CardList cards={playerPile ?? []} />
               </div>

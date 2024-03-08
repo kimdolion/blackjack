@@ -22,7 +22,7 @@ export const CardList = ({ cards }: CardListProps) => {
         alt="Back of card"
         src={BACK_OF_CARD_SRC}
         height={200}
-        width={200}
+        width={150}
       />
     );
   }
@@ -33,7 +33,7 @@ export const CardList = ({ cards }: CardListProps) => {
       alt={`Card is ${card.value} of ${card.suit}`}
       src={card.image}
       height={200}
-      width={200}
+      width={150}
     />
   ));
 };
